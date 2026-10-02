@@ -1,0 +1,38 @@
+{
+  "name": "soc-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Full-stack SOC-style dashboard: React and Express with Prisma—triaging alerts and incidents, log upload and detection workflows, role-based access, audit logging, and local demo data.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dinujathishean/SOC-Dashboard.git"
+  },
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/check-frontend-deps.mjs",
+    "prebuild": "node scripts/check-frontend-deps.mjs",
+    "dev": "vite",
+    "dev:server": "npm run dev --prefix server",
+    "dev:full": "node scripts/run-dev-full.mjs",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "recharts": "^2.13.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "~5.6.2",
+    "vite": "^5.4.10"
+  }
+}
