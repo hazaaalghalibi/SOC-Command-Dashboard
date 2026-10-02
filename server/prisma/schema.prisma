@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  /// admin | analyst | viewer
+  role         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  assignedIncidents Incident[] @relation("IncidentAssignee")
+  logs               Log[]
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  timelineActions    IncidentTimelineEvent[] @relation("TimelineActor")
+}
+
+model Log {
+  id         String   @id @default(cuid())
+  timestamp  DateTime @default(now())
+  sourceIp   String
+  method     String?
+  path       String?
+  statusCode Int?
+  userAgent  String?
+  message    String
+  outcome    String?
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  alerts     Alert[]
+}
+
+model Incident {
+  id           String   @id
+  title        String
+  status       String
+  severity     String
+  description  String?
+  /// Investigation notes (Markdown/plain)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  assignedToId String?
+  assignedTo   User?    @relation("IncidentAssignee", fields: [assignedToId], references: [id])
+  alerts       Alert[]
+  timelineEvents IncidentTimelineEvent[]
+}
+
+model Alert {
+  id               String   @id
+  timestamp        DateTime
+  eventType        String
+  sourceIp         String
+  severity         String
+  status           String
+  assignedAnalyst  String
+  description      String
+  destination      String?
+  mitreTactic      String?
+  /// e.g. T1110, T1190
+  mitreTechnique   String?
+  /// auth | web | firewall | endpoint
+  sourceType       String   @default("web")
+  incidentId       String?
+  incident         Incident? @relation(fields: [incidentId], references: [id])
+  logId            String?
+  log              Log?      @relation(fields: [logId], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+/// Case timeline entries (audit-style narrative)
+model IncidentTimelineEvent {
+  id           String    @id @default(cuid())
+  incidentId   String
+  incident     Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  at           DateTime  @default(now())
+  kind         String
+  title        String
+  detail       String?
+  actorUserId  String?
+  actor        User?     @relation("TimelineActor", fields: [actorUserId], references: [id])
+  alertId      String?
+
+  @@index([incidentId, at])
+}
+
+/// Immutable analyst action log
+model AuditLog {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  details    String?
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+/// In-app notifications (per user)
+model Notification {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  linkKind  String?
+  linkId    String?
+
+  @@index([userId, read])
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  message   String
+  tone      String
+}
+
+model Metric {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value Int    @default(0)
+}
